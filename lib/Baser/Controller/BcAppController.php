@@ -299,15 +299,16 @@ class BcAppController extends Controller {
 		if ($this->name != 'Installations' && $this->name != 'Updaters' && isset($this->BcAuthConfigure)) {
 
 			$configs = Configure::read('BcAuthPrefix');
+			$authPrefix = '';
 			if (!empty($this->request->params['prefix']) && isset($configs[$this->request->params['prefix']])) {
 				$config = $configs[$this->request->params['prefix']];
 				if (count($configs) >= 2) {
-					$config['auth_prefix'] = $this->request->params['prefix'];
+					$config['auth_prefix'] = $authPrefix = $this->request->params['prefix'];
 				}
 			} elseif (isset($configs['front'])) {
 				$config = $configs['front'];
 				if (count($configs) >= 2) {
-					$config['auth_prefix'] = 'front';
+					$config['auth_prefix'] = $authPrefix = 'front';
 				}
 			} else {
 				$config = array();
@@ -322,15 +323,14 @@ class BcAppController extends Controller {
 			// =================================================================
 			$user = $this->BcAuth->user();
 			if ($user) {
-				$userModel = $this->Session->read('Auth.User.userModel');
+				$userModel = $user['userModel'];
 				$User = ClassRegistry::init($userModel);
 				if(strpos($userModel, '.') !== false) {
 					list($plugin, $userModel) = explode('.', $userModel);
 				}
 				if ($userModel && !empty($this->{$userModel})) {
-					$authPrefix = $this->Session->read('Auth.User.authPrefix');
 					$UserGroup = ClassRegistry::init('UserGroup');
-					$userGroups = $UserGroup->find('all', array('conditions' => array('UserGroup.auth_prefix' => $authPrefix), 'recursive' => -1));
+					$userGroups = $UserGroup->find('all', array('conditions' => array('UserGroup.auth_prefix LIKE' => '%' . $authPrefix . '%'), 'recursive' => -1));
 					$userGroupIds = Hash::extract($userGroups, '{n}.UserGroup.id');
 					$conditions = array(
 						$userModel . '.id'				=> $user['id'], 
@@ -1184,10 +1184,9 @@ class BcAppController extends Controller {
 			// ユーザーモデルがユーザーグループと関連していない場合
 			$user = $this->BcAuth->user();
 			if ($user) {
-				$userModel = $this->Session->read('Auth.userModel');
 				$authPrefixSettings = Configure::read('BcAuthPrefix');
 				if (!empty($user['authPrefix']) && !empty($authPrefixSettings[$user['authPrefix']])) {
-					$authPrefix = $user['authPrefix'];
+					$authPrefix = explode(',', $user['authPrefix']);
 				} else {
 					foreach ($authPrefixSettings as $key => $authPrefixSetting) {
 						if (!empty($authPrefixSetting['userModel'])) {
@@ -1196,7 +1195,7 @@ class BcAppController extends Controller {
 							$currentUserModel = 'User';
 						}
 						if ($currentUserModel == $userModel) {
-							$authPrefix = $key;
+							$authPrefix = array($key);
 							break;
 						}
 					}
@@ -1207,13 +1206,15 @@ class BcAppController extends Controller {
 				$this->setMessage('指定されたページへのアクセスは許可されていません。', true);
 				$this->redirect($ref);
 			}
+		} else {
+			$authPrefix = explode(',', $authPrefix);
 		}
 
 		if (!empty($this->request->params['prefix'])) {
 			$requestedPrefix = $this->request->params['prefix'];
 		}
 
-		if ($requestedPrefix && ($requestedPrefix != $authPrefix)) {
+		if ($requestedPrefix && (!in_array($requestedPrefix, $authPrefix))) {
 			$this->setMessage('指定されたページへのアクセスは許可されていません。', true);
 			$this->redirect('/');
 			return;
