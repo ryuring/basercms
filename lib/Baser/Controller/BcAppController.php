@@ -1192,8 +1192,7 @@ class BcAppController extends Controller {
 		}
 
 		$authPrefix = $UserClass->getAuthPrefix($this->BcAuth->user('name'));
-		if (!$authPrefix || !$this->BcAuth->userScope) {
-			// ユーザーモデルがユーザーグループと関連していない場合
+		if (!$authPrefix) {
 			$user = $this->BcAuth->user();
 			if ($user) {
 				$authPrefixSettings = Configure::read('BcAuthPrefix');
