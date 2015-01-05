@@ -74,6 +74,14 @@ class UserGroupsController extends AppController {
 		if ($this->request->params['prefix'] == 'admin') {
 			$this->set('usePermission', $this->UserGroup->checkOtherAdmins());
 		}
+
+		$authPrefixes = array();
+		foreach (Configure::read('BcAuthPrefix') as $key => $authPrefix) {
+			$authPrefixes[$key] = $authPrefix['name'];
+		}
+		if (count($authPrefixes) <= 1) {
+			$this->UserGroup->validator()->remove('auth_prefix');
+		}
 	}
 
 /**
@@ -140,6 +148,9 @@ class UserGroupsController extends AppController {
 		} else {
 
 			/* 更新処理 */
+			if (empty($this->request->data['UserGroup']['auth_prefix'])) {
+				$this->request->data['UserGroup']['auth_prefix'] = 'admin';
+			}
 			$this->request->data['UserGroup']['auth_prefix'] = implode(',', $this->request->data['UserGroup']['auth_prefix']);
 			if ($this->UserGroup->save($this->request->data)) {
 				$this->setMessage('ユーザーグループ「' . $this->request->data['UserGroup']['name'] . '」を更新しました。', false, true);
