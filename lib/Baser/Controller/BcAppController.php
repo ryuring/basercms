@@ -626,10 +626,11 @@ class BcAppController extends Controller {
 		$this->set('preview', $this->preview);
 
 		/* ログインユーザー */
-		if (BC_INSTALLED && isset($_SESSION['Auth']['User']) && $this->name != 'Installations' && !Configure::read('BcRequest.isUpdater') && !Configure::read('BcRequest.isMaintenance') && $this->name != 'CakeError') {
-			$this->set('user', $_SESSION['Auth']['User']);
+		$sessionKey = BcUtil::getLoginUserSessionKey();
+		if (BC_INSTALLED && isset($_SESSION['Auth'][$sessionKey]) && $this->name != 'Installations' && !Configure::read('BcRequest.isUpdater') && !Configure::read('BcRequest.isMaintenance') && $this->name != 'CakeError') {
+			$this->set('user', $_SESSION['Auth'][$sessionKey]);
 			if (!empty($this->request->params['admin'])) {
-				$this->set('favorites', $this->Favorite->find('all', array('conditions' => array('Favorite.user_id' => $_SESSION['Auth']['User']['id']), 'order' => 'Favorite.sort', 'recursive' => -1)));
+				$this->set('favorites', $this->Favorite->find('all', array('conditions' => array('Favorite.user_id' => $_SESSION['Auth'][$sessionKey]['id']), 'order' => 'Favorite.sort', 'recursive' => -1)));
 			}
 		}
 
@@ -639,7 +640,7 @@ class BcAppController extends Controller {
 			$currentPrefix = 'front';
 		}
 		$this->set('currentPrefix', $currentPrefix);
-		$this->set('authPrefix', $this->Session->read('Auth.User.authPrefix'));
+		$this->set('authPrefix', $this->Session->read('Auth.' . $sessionKey . '.authPrefix'));
 
 		/* 携帯用絵文字データの読込 */
 		// TODO 実装するかどうか検討する
