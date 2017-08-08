@@ -14,10 +14,9 @@ if (Configure::read('debug') == 0 && $mailContent['MailContent']['redirect_url']
 <h3><?php echo __('メール送信完了') ?></h3>
 
 <div>
-	<p><?php echo __('お問い合わせ頂きありがとうございました。') ?><br>
-		<?php echo __('確認次第、ご連絡させて頂きます。') ?></p>
+	<p><?php echo __('お問い合わせ頂きありがとうございました。<br>確認次第、ご連絡させて頂きます。') ?></p>
 	<?php if (Configure::read('debug') == 0 && $mailContent['MailContent']['redirect_url']): ?>
-		<p>※<?php echo __('５秒後にトップページへ自動的に移動します。') ?></p>
+		<p>※<?php echo __('%s 秒後にトップページへ自動的に移動します。', 5) ?></p>
 		<p><a href="<?php echo $mailContent['MailContent']['redirect_url'] ?>"><?php echo __('移動しない場合はコチラをクリックしてください。') ?>≫</a></p>
 	<?php endif; ?>
 </div>
