@@ -105,7 +105,7 @@ $entryDates = $data['entryDates'];
 	} else {
 		print __(date('M', strtotime(date('Y') . '/' . $month3 . '/1')));
 	}
-	print "　" . $year . "/" . $month . "　";
+	print "　" . $year . "/" . __(date('M')) . "　"; // CHECK $month → __(date('M'))
 	if ($data['next']) {
 		print $this->BcBaser->getLink(__(date('M', strtotime(date('Y') . '/' . $month4 . '/1'))), $this->request->params['Content']['url'] . '/archives/date/' . $year4 . '/' . $month4, null, false);
 	} else {
