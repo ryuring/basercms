@@ -11,8 +11,8 @@ $adminPrefix = BcUtil::getAdminPrefix();
 　　　　　　　　◆◇　<?php echo __('コメントを受付けました') ?>　◇◆ 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-　<?php echo $Content['title'] ?> <?php echo __('へのコメントを受け付けました。
-　受信内容は下記のとおりです。') ?>
+　<?php echo $Content['title'] ?> <?php echo __('へのコメントを受け付けました。') ?> 
+　<?php echo __('受信内容は下記のとおりです。') ?> 
 
 　「<?php echo $BlogPost['name'] ?>」
 　<?php echo $this->BcBaser->getUri($Content['url'] . '/archives/' . $BlogPost['no'], false) ?>　
@@ -27,7 +27,7 @@ $adminPrefix = BcUtil::getAdminPrefix();
 
 <?php echo ($BlogComment['message']) ?>　
 
-<?php echo __('コメントの公開状態を変更する場合は次のURLよりご確認ください。') ?>
+<?php echo __('コメントの公開状態を変更する場合は次のURLよりご確認ください。') ?> 
 <?php echo $this->BcBaser->getUri('/' . $adminPrefix . '/blog/blog_comments/index/' . $BlogContent['id'], false) ?>　
 　
 　

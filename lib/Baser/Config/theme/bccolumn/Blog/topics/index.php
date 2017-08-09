@@ -40,7 +40,7 @@ $(function(){
 		</div>
 	<?php endforeach; ?>
 <?php else: ?>
-	<p class="no-data"><?php echo __('詳細ページへ') ?></p>
+	<p class="no-data"><?php echo __('記事がありません。') ?></p>
 <?php endif; ?>
 <!-- pagination -->
 <?php $this->BcBaser->pagination('simple'); ?>
