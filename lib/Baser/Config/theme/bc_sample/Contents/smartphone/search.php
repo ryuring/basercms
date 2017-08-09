@@ -11,7 +11,7 @@ $this->request->params['action'] = str_replace('smartphone_', '', $this->request
 
 <?php if (!empty($this->Paginator)): ?>
 	<div class="search-result">
-		<?php echo $this->Paginator->counter(array('format' => '<strong>' . implode(' ', $query) . '</strong>'.__(' で検索した結果').' <strong>%start%〜%end%</strong>'.__('件目').' / %count% '.__('件'))) ?>
+		<?php echo $this->Paginator->counter(array('format' => '<strong>' . implode(' ', $query) . '</strong> '.__('で検索した結果').' <strong>%start%〜%end%</strong>'.__('件目').' / %count% '.__('件'))) ?>
 	</div>
 <?php endif ?>
 <?php $this->BcBaser->element('list_num') ?>
