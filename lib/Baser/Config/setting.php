@@ -28,16 +28,16 @@ $config['BcApp'] = array(
 			'contents' => array(
 				array('name' => __d('baser', 'コンテンツ管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'contents', 'action' => 'index')),
 				array('name' => __d('baser', 'ウィジェット管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'widget_areas', 'action' => 'index')),
-				array('name' => __d('baser', 'テーマ管理', 'url)' => array('admin' => true, 'plugin' => null, 'controller' => 'themes', 'action' => 'index')),
-				array('name' => __d('baser', 'プラグイン管理', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'plugins', 'action' => 'index')),
-				array('name' => __d('baser', 'システム設定', 'url)' => array('admin' => true, 'plugin' => null, 'controller' => 'site_configs', 'action' => 'form')),
-				array('name' => __d('baser', 'ユーザー管理', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'users', 'action' => 'index')),
-				array('name' => __d('baser', 'ユーザーグループ管理', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'user_groups', 'action' => 'index')),
-				array('name' => __d('baser', '検索インデックス管理', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'search_indices', 'action' => 'index')),
-				array('name' => __d('baser', 'エディタテンプレート管理', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'editor_templates', 'action' => 'index')),
-				array('name' => __d('baser', 'サブサイト管理', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'sites', 'action' => 'index')),
-				array('name' => __d('baser', 'ユーティリティ', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'tools', 'action' => 'index')),
-				array('name' => __d('baser', 'サーバーキャッシュ削除', 'url') => array('admin' => true, 'plugin' => null, 'controller' => 'site_configs', 'action' => 'del_cache'), 'options' => array('confirm' => __d('baser', 'サーバーキャッシュを削除します。いいですか？')))
+				array('name' => __d('baser', 'テーマ管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'themes', 'action' => 'index')),
+				array('name' => __d('baser', 'プラグイン管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'plugins', 'action' => 'index')),
+				array('name' => __d('baser', 'システム設定'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'site_configs', 'action' => 'form')),
+				array('name' => __d('baser', 'ユーザー管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'users', 'action' => 'index')),
+				array('name' => __d('baser', 'ユーザーグループ管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'user_groups', 'action' => 'index')),
+				array('name' => __d('baser', '検索インデックス管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'search_indices', 'action' => 'index')),
+				array('name' => __d('baser', 'エディタテンプレート管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'editor_templates', 'action' => 'index')),
+				array('name' => __d('baser', 'サブサイト管理'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'sites', 'action' => 'index')),
+				array('name' => __d('baser', 'ユーティリティ'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'tools', 'action' => 'index')),
+				array('name' => __d('baser', 'サーバーキャッシュ削除'), 'url' => array('admin' => true, 'plugin' => null, 'controller' => 'site_configs', 'action' => 'del_cache'), 'options' => array('confirm' => __d('baser', 'サーバーキャッシュを削除します。いいですか？')))
 			))),
 	// コアプラグイン
 	'corePlugins' => array('Blog', 'Feed', 'Mail', 'Uploader'),
