@@ -17,7 +17,7 @@
 		"source": "https://github.com/baserproject/basercms"
 	},
 	"require": {
-		"php": ">=5.4.*",
+		"php": ">=5.4.0",
 		"ext-mcrypt": "*",
 		"ext-gd": "*"
     },
