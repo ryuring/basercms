@@ -40,7 +40,7 @@ before_script:
     sudo add-apt-repository ppa:ondrej/php;
     sudo apt update;
     sudo apt-get install php7.4-gd;
-    echo "extension = gd.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini;
+    echo \"extension = gd.so\" >> ~/.phpenv/versions/'$(phpenv version-name)'/etc/php.ini;
     fi;"
   - |
     bash -c "if [ '$DB' == 'mysql' ]; then
