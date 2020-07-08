@@ -1,15 +1,15 @@
 language: php
 
 php:
-  - 5.4
-  - 5.5
-  - 5.6
-  - 7.0
-  - 7.1
-  - 7.2
-  - 7.3
+#  - 5.4
+#  - 5.5
+#  - 5.6
+#  - 7.0
+#  - 7.1
+#  - 7.2
+#  - 7.3
   - 7.4
-  - hhvm
+ # - hhvm
 
 env:
   - DB=mysql
@@ -65,8 +65,8 @@ before_script:
   - php ./Console/cake.php bc_manager checkenv
   - php ./Console/cake.php bc_manager install "http://localhost" "$DB" "admin" "basercms" "webmaster@example.org" --host "localhost" --database "basercms" --login "basercms" --password "basercms" --prefix "mysite_" --data "bc_sample.default"
 
-script:
-  - php ./Console/cake.php baser_test baser BcAll
+#script:
+#  - php ./Console/cake.php baser_test baser BcAll
 
 notifications:
   email: false
