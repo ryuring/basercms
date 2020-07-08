@@ -38,7 +38,13 @@ before_script:
   - |
     bash -c "if [[ '${TRAVIS_PHP_VERSION:0:3}' =~ ^7\.4$ ]]; then
     sudo add-apt-repository -y ppa:ondrej/php;
-    sudo apt update;
+    sudo gpg --recv-key 78BD65473CB3BD13
+    sudo gpg -a --export 78BD65473CB3BD13 | sudo apt-key add -
+    sudo gpg --recv-key 6B05F25D762E3157
+    sudo gpg -a --export 6B05F25D762E3157 | sudo apt-key add -
+    sudo apt-get update;
+    export LANG=en_US.UTF-8;
+    export LC_ALL=en_US.UTF-8;
     sudo apt-get -y install php7.4-gd;
     echo \"extension = gd.so\" >> ~/.phpenv/versions/'$(phpenv version-name)'/etc/php.ini;
     fi;"
