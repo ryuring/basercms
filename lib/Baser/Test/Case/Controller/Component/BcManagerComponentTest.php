@@ -868,6 +868,7 @@ class BcManagerComponentTest extends BaserTestCase
 	 */
 	public function testCheckDbConnectionPDOException()
 	{
+
 		$this->expectException('PDOException');
 
 		// でたらめな入力
