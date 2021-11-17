@@ -870,6 +870,7 @@ class BcManagerComponentTest extends BaserTestCase
 	{
 
 		$this->expectException('PDOException');
+		$this->expectExceptionMessage("SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo failed:");
 
 		// でたらめな入力
 		$config = [
