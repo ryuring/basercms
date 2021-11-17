@@ -868,7 +868,6 @@ class BcManagerComponentTest extends BaserTestCase
 	 */
 	public function testCheckDbConnectionPDOException()
 	{
-		$this->expectExceptionMessage("SQLSTATE[HY000] [2002] php_network_getaddresses: getaddrinfo failed: Temporary failure in name resolution");
 		$this->expectException('PDOException');
 
 		// でたらめな入力
