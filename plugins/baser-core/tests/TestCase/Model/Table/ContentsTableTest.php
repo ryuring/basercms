@@ -1018,6 +1018,8 @@ class ContentsTableTest extends BcTestCase
     {
         $dbService = new BcDatabaseService();
         $dbService->truncate('contents');
+        $dbService->truncate('content_folders');
+        $dbService->truncate('pages');
         $this->loadFixtureScenario(SmallSetContentsScenario::class);
         $this->assertTrue($this->Contents->resetTree());
 
