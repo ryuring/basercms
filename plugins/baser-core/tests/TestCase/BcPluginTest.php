@@ -258,7 +258,7 @@ class BcPluginTest extends BcTestCase
      */
     public function test_execScript()
     {
-        $this->fixtureStrategy->teardownTest();
+        $this->truncateTable('users');
         $version = '1.0.0';
         $updatePath = Plugin::path('BcBlog') . 'config' . DS . 'update';
         $versionPath = $updatePath . DS . $version;
