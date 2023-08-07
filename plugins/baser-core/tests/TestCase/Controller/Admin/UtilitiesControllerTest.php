@@ -53,7 +53,7 @@ class UtilitiesControllerTest extends BcTestCase
     public function setUp(): void
     {
         parent::setUp();
-        ConnectionManager::alias('test', 'default');
+//        ConnectionManager::alias('test', 'default');
         $this->loadFixtureScenario(InitAppScenario::class);
         $request = $this->getRequest('/baser/admin/baser-core/utilities/');
         $this->loginAdmin($request);
