@@ -249,9 +249,10 @@ class ThemeFilesService extends BcThemeFileService implements ThemeFilesServiceI
                 $themePath = Plugin::templatePath($theme) . 'plugin' . DS . $params['plugin'] . DS . $params['path'];
             }
         }
+
         $folder = new BcFolder(dirname($themePath));
         $folder->create();
-        if (copy($params['fullpath'], $themePath)) {
+        if (file_exists($params['fullpath']) && copy($params['fullpath'], $themePath)) {
             chmod($themePath, 0666);
             return str_replace(ROOT, '', $themePath);
         } else {

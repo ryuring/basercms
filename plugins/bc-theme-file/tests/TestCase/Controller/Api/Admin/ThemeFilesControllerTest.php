@@ -63,6 +63,7 @@ class ThemeFilesControllerTest extends BcTestCase
         $fullpath = BASER_PLUGINS . 'BcThemeSample' . '/templates/layout/';
         $data = [
             'theme' => 'BcThemeSample',
+            'parent' => $fullpath,
             'type' => 'layout',
             'path' => '',
             'base_name' => 'base_name_1',
@@ -318,13 +319,17 @@ class ThemeFilesControllerTest extends BcTestCase
     {
         //テストテーマフォルダを作成
         $fullpath = BASER_PLUGINS . 'BcThemeSample' . '/templates/layout/';
-        (new BcFolder($fullpath))->create();
+        $folder = new BcFolder($fullpath . 'new_folder');
+        $folder->create();
 
         //テストファイルを作成
-        $filePath = TMP  . 'test_upload' . DS;
-        (new BcFolder($filePath))->create();
+        $filePath = TMP . 'test_upload' . DS;
+        $folder = new BcFolder($filePath);
+        $folder->create();
+
         $testFile = $filePath . 'uploadTestFile.html';
-        (new BcFile($testFile))->create();
+        $file = new BcFile($testFile);
+        $file->create();
 
         //Postデータを生成
         $data = [
@@ -346,8 +351,6 @@ class ThemeFilesControllerTest extends BcTestCase
         $this->assertTrue(file_exists($fullpath . 'new_folder/uploadTestFile.html'));
 
         //テストファイルとフォルダを削除
-        rmdir($filePath);
-        unlink($fullpath . 'new_folder/uploadTestFile.html');
-        rmdir($fullpath . 'new_folder');
+        $folder->delete();
     }
 }

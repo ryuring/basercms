@@ -74,15 +74,16 @@ class ThemeFileForm extends Form
         $entity = new ThemeFile(['fullpath' => $newPath]);
         if ($entity->type === 'text') {
             $file = new BcFile($oldPath);
-            if ($file->open('w')) {
+            if ($fp = fopen($oldPath, 'w')) {
                 if (isset($data['contents'])){
-                    $file->append($data['contents']);
+                    $file->write($data['contents']);
                 }
                 unset($file);
                 $result = true;
             } else {
                 $result = false;
             }
+            fclose($fp);
         } else {
             $result = true;
         }

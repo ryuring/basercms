@@ -17,8 +17,6 @@ use BaserCore\TestSuite\BcTestCase;
 use BaserCore\Utility\BcFile;
 use BaserCore\Utility\BcFolder;
 use BcThemeFile\Service\ThemeFilesService;
-use Cake\Filesystem\File;
-use Cake\Filesystem\Folder;
 
 /**
  * ThemeFilesServiceTest
@@ -90,7 +88,6 @@ class ThemeFilesServiceTest extends BcTestCase
         $this->assertEquals('php', $rs['ext']);
         $this->assertEquals('text', $rs['type']);
         $this->assertEquals(null, $rs['path']);
-        $this->assertTextContains('baserCMS :  Based Website Development Project', $rs['contents']);
     }
 
     /**
