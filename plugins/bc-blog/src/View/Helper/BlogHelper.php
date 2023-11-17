@@ -40,6 +40,7 @@ use BcBlog\Service\Front\BlogFrontServiceInterface;
 use Cake\Core\App;
 use Cake\Core\Configure;
 use Cake\Datasource\EntityInterface;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Datasource\ResultSetInterface;
 use Cake\Filesystem\Folder;
 use Cake\ORM\TableRegistry;
@@ -89,6 +90,12 @@ class BlogHelper extends Helper
     public $BlogCategory = null;
 
     /**
+     * ブログコンテンツサービス
+     * @var BlogContentsServiceInterface
+     */
+    public $BlogContentsService = null;
+
+    /**
      * コンテンツ
      *
      * @var array
@@ -108,7 +115,12 @@ class BlogHelper extends Helper
     public function __construct(View $view, array $config = [])
     {
         parent::__construct($view, $config);
-        $this->setContent();
+        // インストールが完了している場合のみ実行
+        // インストール時に呼び出された際にサービスが利用できないため
+        if(BcUtil::isInstalled() && $view->getName() !== 'Error') {
+            $this->BlogContentsService = $this->getService(BlogContentsServiceInterface::class);
+            $this->setContent();
+        }
     }
 
     /**
@@ -119,62 +131,57 @@ class BlogHelper extends Helper
      * @param int $blogContentId ブログコンテンツID
      * @return void
      * @checked
+     * @noTodo
      */
     public function setContent($blogContentId = null)
     {
-        $blogContentUpdated = false;
-        $content = false;
-        if (empty($this->currentBlogContent) || ($blogContentId != $this->currentBlogContent->id)) {
-            if ($blogContentId) {
-                if ($this->_View->getRequest()->getQuery('preview') == 'default' && $this->_View->getRequest()->getData()) {
-                    // TODO ucmitz 未確認のためコメントアウト
-//                    if (!empty($this->_View->getRequest()->getData('BlogContent'))) {
-//                        $this->currentBlogContent = $this->_View->getRequest()->getData('BlogContent');
-//                        $blogContentUpdated = true;
-//                    }
-                } else {
-                    $BlogContent = TableRegistry::getTableLocator()->get('BcBlog.BlogContents');
-                    $blogContent = $BlogContent->find()->where(['BlogContents.id' => $blogContentId])->first();
-                    $this->currentBlogContent = $blogContent;
-                    $blogContentUpdated = true;
-                }
-            } elseif ($this->_View->get('blogContent')) {
-                $this->currentBlogContent = $this->_View->get('blogContent');
-                if ($this->currentBlogContent->content->type === 'BlogContent') {
-                    $this->currentContent = $this->currentBlogContent->content;
-                } else {
-                    $content = $this->BcContents->getContentByEntityId($this->currentBlogContent->id, 'BlogContent');
-                    if ($content) $this->currentContent = $content;
-                }
+        if($this->currentBlogContent) {
+            if(is_null($blogContentId)) return;
+            if($blogContentId === $this->currentBlogContent->id) return;
+        }
+
+        if($blogContentId) {
+            if(!$this->BlogContentsService) return;
+            try {
+                $this->currentBlogContent = $this->BlogContentsService->get($blogContentId);
+            } catch(RecordNotFoundException) {
+                $this->currentBlogContent = null;
+                $this->currentContent = null;
+                return;
+            } catch(\Throwable $e) {
+                throw $e;
+            }
+            $contentTable = TableRegistry::getTableLocator()->get('BaserCore.Contents');
+            // 現在のサイトにエイリアスが存在するのであればそちらを優先する
+            $site = $this->_View->getRequest()->getAttribute('currentSite');
+            $content = null;
+            if (!empty($site->id)) {
+                $content = $contentTable->find()->where([
+                    'Contents.entity_id' => $this->currentBlogContent->id,
+                    'Contents.type' => 'BlogContent',
+                    'Contents.alias_id IS NOT' => null,
+                    'Contents.site_id' => $site->id
+                ])->first();
+            }
+            if(!$content) {
+                $content = $contentTable->find()->where([
+                    'Contents.entity_id' => $this->currentBlogContent->id,
+                    'Contents.type' => 'BlogContent',
+                    'Contents.alias_id IS' => null,
+                ])->first();
+            }
+            $this->currentContent = $content;
+        } else {
+            if ($this->getView()->get('blogContent')) {
+                $this->currentBlogContent = $this->getView()->get('blogContent');
+                $this->currentContent = $this->currentBlogContent->content;
             }
         }
-        if ($this->currentBlogContent) {
-            if ($blogContentUpdated) {
-                $contentTable = TableRegistry::getTableLocator()->get('BaserCore.Contents');
-                // 現在のサイトにエイリアスが存在するのであればそちらを優先する
-                $site = $this->_View->getRequest()->getAttribute('currentSite');
-                if (!empty($site->id)) {
-                    $content = $contentTable->find()->where([
-                        'Contents.entity_id' => $this->currentBlogContent->id,
-                        'Contents.type' => 'BlogContent',
-                        'Contents.alias_id IS NOT' => null,
-                        'Contents.site_id' => $site->id
-                    ])->first();
-                }
-                if (!$content) {
-                    $content = $contentTable->find()->where([
-                        'Contents.entity_id' => $this->currentBlogContent->id,
-                        'Contents.type' => 'BlogContent',
-                        'Contents.alias_id IS' => null,
-                    ])->first();
-                }
-                $this->currentContent = $content;
-            }
+
+        if($this->currentBlogContent?->id) {
             /* @var BlogPostsTable $blogPostTable */
             $blogPostTable = TableRegistry::getTableLocator()->get('BcBlog.BlogPosts');
             $blogPostTable->setupUpload($this->currentBlogContent->id);
-        } else {
-            $this->currentContent = null;
         }
     }
 
@@ -219,11 +226,11 @@ class BlogHelper extends Helper
      *
      * @return string
      * @checked
+     * @noTodo
      */
     public function getBlogName()
     {
-        // TODO $this->currentContent に変更する
-        return $this->_View->getRequest()->getAttribute('currentContent')->name;
+        return $this->currentContent->name;
     }
 
     /**
@@ -243,11 +250,11 @@ class BlogHelper extends Helper
      *
      * @return string
      * @checked
+     * @noTodo
      */
     public function getTitle()
     {
-        // TODO $this->currentContent に変更する
-        return $this->_View->getRequest()->getAttribute('currentContent')->title;
+        return $this->currentContent->title;
     }
 
     /**
@@ -985,7 +992,7 @@ class BlogHelper extends Helper
             }
             $img = $this->BcBaser->getImg($url, $options);
             if ($link) {
-                return $this->BcBaser->getLink($img, $this->_View->getRequest()->getAttribute('currentContent')->url . 'archives/' . $post->no);
+                return $this->BcBaser->getLink($img, $this->currentContent->url . 'archives/' . $post->no);
             } else {
                 return $img;
             }
@@ -1677,7 +1684,24 @@ class BlogHelper extends Helper
         } else {
             $data = ['posts' => $blogPosts];
         }
+
+        if(is_array($contentsName)) {
+            $blogContent = $blogContentsService->findByName($contentsName[0]);
+        } else {
+            $blogContent = $blogContentsService->findByName($contentsName);
+        }
+
+        $currentBlogContentId = null;
+        if($this->currentBlogContent) {
+            $currentBlogContentId = $this->currentBlogContent->id;
+        }
+
+        $this->setContent($blogContent->id);
         $this->BcBaser->element($template, $data);
+
+        if($currentBlogContentId) {
+            $this->setContent($currentBlogContentId);
+        }
     }
 
     /**
@@ -1734,7 +1758,7 @@ class BlogHelper extends Helper
             }
         }
         if ($options['autoSetCurrentBlog'] && empty($options['contentUrl']) && empty($options['contentId'])) {
-            $currentContent = $this->_View->getRequest()->getAttribute('currentContent');
+            $currentContent = $this->currentContent;
             if ($this->isBlog() && !empty($currentContent->entity_id)) {
                 $options['contentId'] = $currentContent->entity_id;
             }
@@ -1871,11 +1895,11 @@ class BlogHelper extends Helper
      *
      * @return bool
      * @checked
+     * @noTodo
      */
     public function isBlog()
     {
-        // TODO $this->currentContent に変更
-        return (!empty($this->_View->getRequest()->getAttribute('currentContent')->plugin) && $this->_View->getRequest()->getAttribute('currentContent')->plugin == 'BcBlog');
+        return (!empty($this->currentContent->plugin) && $this->currentContent->plugin == 'BcBlog');
     }
 
     /**
@@ -1902,6 +1926,7 @@ class BlogHelper extends Helper
      * @param int $blogContentId ブログコンテンツID
      * @return bool
      * @checked
+     * @noTodo
      */
     public function isSameSiteBlogContent($blogContentId)
     {
@@ -1912,9 +1937,9 @@ class BlogHelper extends Helper
         ])->first();
         $siteId = $content->site_id;
         $currentSiteId = 0;
-        // TODO $this->currentContent に変更
-        if (!empty($this->_View->getRequest()->getAttribute('currentContent')->alias_id)) {
-            $content = $contentsTable->get($this->_View->getRequest()->getAttribute('currentContent')->alias_id);
+
+        if (!empty($this->currentContent->alias_id)) {
+            $content = $contentsTable->get($this->currentContent->alias_id);
             $currentSiteId = $content->site_id;
         } elseif ($this->_View->getRequest()->getAttribute('currentSite')->id) {
             $currentSiteId = $this->_View->getRequest()->getAttribute('currentSite')->id;
