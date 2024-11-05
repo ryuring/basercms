@@ -89,6 +89,7 @@
             "bin/cake install https://localhost foo@example.com baserCMS1234 basercms --host bc-db --username root --password root"
         ],
         "test": [
+            "git config --global --add safe.directory /var/www/html/",
             "bin/cake setup test",
             "Composer\\Config::disableProcessTimeout",
             "vendor/bin/phpunit --colors=always"
