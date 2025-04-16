@@ -19,9 +19,7 @@ use BaserCore\TestSuite\BcTestCase;
 use BaserCore\Utility\BcContainerTrait;
 use BcMail\Test\Factory\MailContentFactory;
 use BcMail\Test\Factory\MailFieldsFactory;
-use BcMail\View\Helper\MailformHelper;
 use Cake\TestSuite\IntegrationTestTrait;
-use Cake\View\View;
 use CakephpFixtureFactories\Scenario\ScenarioAwareTrait;
 
 class MailControllerTest extends BcTestCase
