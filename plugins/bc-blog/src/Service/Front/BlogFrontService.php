@@ -122,7 +122,7 @@ class BlogFrontService implements BlogFrontServiceInterface
      * @noTodo
      * @unitTest
      */
-    public function getViewVarsForIndexRss(ServerRequest $request, BlogContent $blogContent, ResultSet $posts): array
+    public function getViewVarsForIndexRss(ServerRequest $request, BlogContent $blogContent, PaginatedResultSet $posts): array
     {
         $site = $request->getAttribute('currentSite');
         return [
