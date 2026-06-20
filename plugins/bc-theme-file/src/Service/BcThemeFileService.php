@@ -67,16 +67,20 @@ class BcThemeFileService implements BcThemeFileServiceInterface
         $baseDir = $viewPath . $type . DS;
         $fullPath = $baseDir . $path;
 
+        // パストラバーサル対策:
+        // ベースディレクトリがディスク上に存在せず realpath() が false を返す場合でも
+        // 検証をスキップせず、必ず正規化したパスで境界チェックを行う。
         $resolvedBase = realpath($baseDir);
-        if ($resolvedBase !== false) {
-            $resolvedBase = rtrim($resolvedBase, DS) . DS;
-            $targetDir = realpath(dirname($fullPath));
-            if ($targetDir === false) {
-                $targetDir = $this->normalizePath(dirname($fullPath));
-            }
-            if (!str_starts_with(rtrim($targetDir, DS) . DS, $resolvedBase)) {
-                throw new BcException(__d('baser_core', 'パスにテーマディレクトリ外への参照が含まれています。'));
-            }
+        if ($resolvedBase === false) {
+            $resolvedBase = $this->normalizePath($baseDir);
+        }
+        $resolvedBase = rtrim($resolvedBase, DS) . DS;
+        $targetDir = realpath(dirname($fullPath));
+        if ($targetDir === false) {
+            $targetDir = $this->normalizePath(dirname($fullPath));
+        }
+        if (!str_starts_with(rtrim($targetDir, DS) . DS, $resolvedBase)) {
+            throw new BcException(__d('baser_core', 'パスにテーマディレクトリ外への参照が含まれています。'));
         }
 
         return $fullPath;
