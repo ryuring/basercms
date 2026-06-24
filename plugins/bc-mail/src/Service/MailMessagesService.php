@@ -121,7 +121,7 @@ class MailMessagesService implements MailMessagesServiceInterface
             if (!preg_match('/^[a-zA-Z0-9_.]+$/', $order)) {
                 $order = 'created';
             }
-            $query->order("{$order} {$direction}");
+            $query->orderBy("{$order} {$direction}");
             unset($options['order'], $options['direction']);
         }
         if (!empty($options['limit'])) {
