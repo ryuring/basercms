@@ -84,6 +84,39 @@ class MailFieldsTableTest extends BcTestCase
         $this->assertCount(0, $errors);
     }
 
+    /**
+     * HTML許可項目はスクリプトを拒否し、通常のHTMLは許可する（XSS対策の回帰テスト）
+     */
+    public function test_validationDefaultContainsScript()
+    {
+        $validator = $this->MailFieldsTable->getValidator('default');
+        // スクリプトを含む場合は拒否される
+        $errors = $validator->validate([
+            'name' => 'a', 'field_name' => 'a', 'mail_content_id' => 999, 'type' => 'text',
+            'attention' => '<script>alert(1)</script>',
+            'before_attachment' => '<script>alert(1)</script>',
+            'after_attachment' => '<script>alert(1)</script>',
+            'description' => '<script>alert(1)</script>',
+        ]);
+        $this->assertArrayHasKey('containsScript', $errors['attention']);
+        $this->assertArrayHasKey('containsScript', $errors['before_attachment']);
+        $this->assertArrayHasKey('containsScript', $errors['after_attachment']);
+        $this->assertArrayHasKey('containsScript', $errors['description']);
+
+        // 通常のHTML（<br>/<span>）は許可される
+        $errors = $validator->validate([
+            'name' => 'a', 'field_name' => 'a', 'mail_content_id' => 999, 'type' => 'text',
+            'attention' => '注意<br><span class="x">補足</span>',
+            'before_attachment' => '<br>前',
+            'after_attachment' => '後<br>',
+            'description' => '説明<span>です</span>',
+        ]);
+        $this->assertArrayNotHasKey('attention', $errors);
+        $this->assertArrayNotHasKey('before_attachment', $errors);
+        $this->assertArrayNotHasKey('after_attachment', $errors);
+        $this->assertArrayNotHasKey('description', $errors);
+    }
+
     public function test_validationDefaultEmpty()
     {
         $validator = $this->MailFieldsTable->getValidator('default');
