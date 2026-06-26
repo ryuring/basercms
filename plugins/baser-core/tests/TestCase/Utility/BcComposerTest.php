@@ -44,15 +44,20 @@ class BcComposerTest extends BcTestCase
     public function testSetup()
     {
         BcComposer::setup();
-        $this->assertEquals('cd /var/www/html/;', BcComposer::$cd);
+        // コマンドインジェクション対策で作業ディレクトリは escapeshellarg される
+        $this->assertEquals("cd '/var/www/html/';", BcComposer::$cd);
         $this->assertEquals('/var/www/html/composer/', BcComposer::$composerDir);
         $this->assertEquals('export HOME=/var/www/html/composer/; export COMPOSER_CACHE_DIR=/var/www/html/composer/.composer/cache;', BcComposer::$export);
         $this->assertEquals('php', BcComposer::$php);
 
         // 環境を変更
         BcComposer::setup('/usr/local/bin/php', '/var/www/html/tmp/update');
-        $this->assertEquals('cd /var/www/html/tmp/update/;', BcComposer::$cd);
+        $this->assertEquals("cd '/var/www/html/tmp/update/';", BcComposer::$cd);
         $this->assertEquals('/usr/local/bin/php', BcComposer::$php);
+
+        // 作業ディレクトリにシェルメタ文字が含まれてもエスケープされ、コマンド連結されない
+        BcComposer::setup('php', '/var/www/html/tmp/x; touch /tmp/pwned');
+        $this->assertEquals("cd '/var/www/html/tmp/x; touch /tmp/pwned/';", BcComposer::$cd);
     }
 
     /**

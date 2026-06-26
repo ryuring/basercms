@@ -75,7 +75,8 @@ class BcComposer
             $dir .= '/';
         }
         self::$currentDir = $dir;
-        self::$cd = "cd " . $dir . ';';
+        // コマンドインジェクション対策: 作業ディレクトリはシェルへ連結する前にエスケープする
+        self::$cd = "cd " . escapeshellarg($dir) . ';';
         self::$composerDir = ROOT . DS . 'composer' . DS;
         // Composer は XDG Base Directory 仕様（/etc/xdg の有無や XDG_* 環境変数）により
         // キャッシュディレクトリの位置が .composer/cache か .cache/composer かで変わるため、
