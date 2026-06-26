@@ -822,7 +822,13 @@ class PluginsService implements PluginsServiceInterface
             throw new BcException(__d('baser_core', 'バージョン番号が不正です。'));
         }
 
+        // メタ文字を含む不正な値を拒否（コマンドインジェクション対策）
         if(!preg_match('/^[a-zA-Z0-9\/\.\-_]+$/', $php)) {
+            throw new BcException(__d('baser_core', 'PHP実行パスが不正です。'));
+        }
+        // 任意バイナリ(curl/python 等)の実行を防ぐため、実行ファイル名が PHP バイナリ
+        // (php / php8 / php8.2 等) であることを要求する。
+        if(!preg_match('/^php[0-9.]*$/', basename($php))) {
             throw new BcException(__d('baser_core', 'PHP実行パスが不正です。'));
         }
 

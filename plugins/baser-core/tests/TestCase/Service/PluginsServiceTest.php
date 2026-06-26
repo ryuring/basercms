@@ -604,6 +604,11 @@ EOF;
             'スペース付き' => ['/usr/local/bin/php -r "system(\'id\')"'],
             'アンパサンド付き' => ['/usr/bin/php & curl evil.com'],
             'バッククォート付き' => ['`id`'],
+            // メタ文字は無いが PHP 以外の任意バイナリを指定するケース（任意バイナリ実行対策）
+            'curlバイナリ' => ['/usr/bin/curl'],
+            'pythonバイナリ' => ['/usr/bin/python3'],
+            'bashバイナリ' => ['bash'],
+            'php偽装ディレクトリ配下の他バイナリ' => ['/usr/bin/php/../sh'],
         ];
     }
 
