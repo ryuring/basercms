@@ -698,7 +698,40 @@ class ThemeFilesController extends BcAdminAppController
         if ($data['path'] && is_dir($data['fullpath']) && !preg_match('/\/$/', $data['fullpath'])) {
             $data['fullpath'] .= DS;
         }
+
+        // パストラバーサル対策: 解決後のパスがテーマの所定ディレクトリ配下に収まることを検証する。
+        // ../ 等でテーマ外へ出る操作を全アクションで拒否する（realpath 非依存の字句正規化で判定し、
+        // 対象ディレクトリが未作成でも確実にチェックする）。
+        $baseDir = ($data['type'] !== 'etc') ? $viewPath . $data['type'] . DS : $viewPath;
+        $normalizedBase = $this->normalizePath($baseDir);
+        $normalizedTarget = $this->normalizePath($data['fullpath']);
+        if (strpos($normalizedTarget . DS, $normalizedBase . DS) !== 0) {
+            $this->notFound();
+        }
+
         return $data;
+    }
+
+    /**
+     * パスを字句的に正規化する（../ と . を解決する。ファイルシステムに依存しない）
+     *
+     * パストラバーサルの封じ込め判定に用いる。realpath() と異なり対象が存在しなくても
+     * 正規化できるため、未作成ディレクトリへの操作でも確実に境界チェックできる。
+     *
+     * @param string $path
+     * @return string
+     */
+    protected function normalizePath(string $path): string
+    {
+        $parts = [];
+        foreach (explode(DS, str_replace(['/', '\\'], DS, $path)) as $seg) {
+            if ($seg === '..') {
+                array_pop($parts);
+            } elseif ($seg !== '' && $seg !== '.') {
+                $parts[] = $seg;
+            }
+        }
+        return DS . implode(DS, $parts);
     }
 
 }

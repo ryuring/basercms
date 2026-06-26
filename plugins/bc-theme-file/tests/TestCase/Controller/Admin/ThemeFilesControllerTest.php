@@ -597,6 +597,17 @@ class ThemeFilesControllerTest extends BcTestCase
         $this->assertEquals($rs['fullpath'], $expected);
     }
 
+    /**
+     * test parseArgs テーマディレクトリ外へのパストラバーサルを拒否する（H-2 回帰テスト）
+     */
+    public function test_parseArgs_denyTraversal()
+    {
+        $this->expectException(\Cake\Http\Exception\NotFoundException::class);
+        $this->execPrivateMethod($this->ThemeFilesController, 'parseArgs', [[
+            'BcThemeSample', 'layout', '..', '..', '..', 'config'
+        ]]);
+    }
+
     public static function parseArgsDataProvider()
     {
         return [
