@@ -14,6 +14,7 @@ namespace BcFavorite\Service;
 use BcFavorite\Model\Table\FavoritesTable;
 use BaserCore\Utility\BcUtil;
 use Cake\Datasource\EntityInterface;
+use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Exception\PersistenceFailedException;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -55,7 +56,17 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function get($id): EntityInterface
     {
-        return $this->Favorites->get($id);
+        // IDOR対策: お気に入りはユーザー個別データのため、ログインユーザー所有のものだけ取得する
+        $user = BcUtil::loginUser();
+        if (!$user) {
+            throw new RecordNotFoundException(__d('baser_core', 'データが見つかりません。'));
+        }
+        return $this->Favorites->find()
+            ->where([
+                'Favorites.id' => $id,
+                'Favorites.user_id' => $user->id,
+            ])
+            ->firstOrFail();
     }
 
     /**
@@ -100,9 +111,12 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function create(array $postData)
     {
+        // 所有者偽装対策: user_id はリクエスト値ではなくログインユーザーで固定する
+        $userId = BcUtil::loginUser()->id;
         $favorite = $this->Favorites->newEmptyEntity();
-        $favorite->sort = $this->Favorites->getMax('sort', ['user_id' => $postData['user_id']]) + 1;
+        $favorite->sort = $this->Favorites->getMax('sort', ['user_id' => $userId]) + 1;
         $favorite = $this->Favorites->patchEntity($favorite, $postData);
+        $favorite->user_id = $userId;
         return $this->Favorites->saveOrFail($favorite);
     }
 
@@ -118,7 +132,10 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function update(EntityInterface $target, array $postData)
     {
+        // 所有者偽装対策: user_id をリクエスト値で付け替えさせず、保存済みの所有者を維持する
+        $ownerId = $target->user_id;
         $favorite = $this->Favorites->patchEntity($target, $postData);
+        $favorite->user_id = $ownerId;
         return $this->Favorites->saveOrFail($favorite);
     }
 
@@ -132,7 +149,8 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function delete(int $id)
     {
-        return $this->Favorites->delete($this->Favorites->get($id));
+        // IDOR対策: 所有者スコープ済みの get() を使い、他ユーザーのお気に入りを削除させない
+        return $this->Favorites->delete($this->get($id));
     }
 
     /**

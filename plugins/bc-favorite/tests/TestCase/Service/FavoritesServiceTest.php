@@ -83,12 +83,29 @@ class FavoritesServiceTest extends BcTestCase
      */
     public function testGet(): void
     {
+        $this->loadFixtureScenario(InitAppScenario::class);
+        $this->loginAdmin($this->getRequest());
         $this->loadFixtureScenario(FavoritesScenario::class);
         $result = $this->FavoritesService->get(1);
         $this->assertEquals("固定ページ管理", $result->name);
 
         $this->expectException('Cake\Datasource\Exception\RecordNotFoundException');
         $result = $this->FavoritesService->get(0);
+    }
+
+    /**
+     * 他ユーザーのお気に入りは取得・削除できないこと（IDOR対策の回帰テスト）
+     */
+    public function testGet_deniesOtherUsersFavorite(): void
+    {
+        $this->loadFixtureScenario(InitAppScenario::class); // 管理者ユーザー(id=1)
+        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
+        $this->loadFixtureScenario(FavoritesScenario::class); // user_id=1 のお気に入り
+        // 別ユーザー(id=2)でログイン
+        $this->loginAdmin($this->getRequest(), 2);
+        // 他ユーザー(id=1)のお気に入りは取得できない
+        $this->expectException('Cake\Datasource\Exception\RecordNotFoundException');
+        $this->FavoritesService->get(1);
     }
 
     /**
@@ -139,6 +156,8 @@ class FavoritesServiceTest extends BcTestCase
      */
     public function testUpdate(): void
     {
+        $this->loadFixtureScenario(InitAppScenario::class);
+        $this->loginAdmin($this->getRequest());
         $this->loadFixtureScenario(FavoritesScenario::class);
         $favorite = $this->FavoritesService->get(1);
         $this->FavoritesService->update($favorite, [
