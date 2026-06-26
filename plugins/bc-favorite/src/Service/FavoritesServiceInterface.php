@@ -28,6 +28,13 @@ interface FavoritesServiceInterface
     public function get($id): EntityInterface;
 
     /**
+     * 操作（取得・編集・削除）権限を持つか判定する
+     * @param EntityInterface $favorite
+     * @return bool
+     */
+    public function isEditable(EntityInterface $favorite): bool;
+
+    /**
      * お気に入り一覧を取得
      * @param array $queryParams
      * @return Query

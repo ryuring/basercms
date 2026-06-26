@@ -14,7 +14,6 @@ namespace BcFavorite\Service;
 use BcFavorite\Model\Table\FavoritesTable;
 use BaserCore\Utility\BcUtil;
 use Cake\Datasource\EntityInterface;
-use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\ORM\Exception\PersistenceFailedException;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
@@ -56,21 +55,26 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function get($id): EntityInterface
     {
-        // IDOR対策: お気に入りはユーザー個別データのため、ログインユーザー所有のものだけ取得する。
-        // ただしシステム管理者は全ユーザーのお気に入りにアクセスできる。
+        return $this->Favorites->get($id);
+    }
+
+    /**
+     * 操作（取得・編集・削除）権限を持つか判定する
+     *
+     * 権限介入はコントローラーで行うためのヘルパー。所有者またはシステム管理者のみ許可する。
+     *
+     * @param EntityInterface $favorite
+     * @return bool
+     * @checked
+     * @noTodo
+     */
+    public function isEditable(EntityInterface $favorite): bool
+    {
         $user = BcUtil::loginUser();
         if (!$user) {
-            throw new RecordNotFoundException(__d('baser_core', 'データが見つかりません。'));
+            return false;
         }
-        if (BcUtil::isAdminUser($user)) {
-            return $this->Favorites->get($id);
-        }
-        return $this->Favorites->find()
-            ->where([
-                'Favorites.id' => $id,
-                'Favorites.user_id' => $user->id,
-            ])
-            ->firstOrFail();
+        return BcUtil::isAdminUser($user) || (int)$favorite->user_id === (int)$user->id;
     }
 
     /**
@@ -115,16 +119,10 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function create(array $postData)
     {
-        // operator は自分のお気に入りのみ作成可（user_id をログインユーザーに固定し偽装を防ぐ）。
-        // システム管理者は user_id を指定して他ユーザー分も作成できる。
-        $user = BcUtil::loginUser();
-        $userId = (BcUtil::isAdminUser($user) && !empty($postData['user_id']))
-            ? (int)$postData['user_id']
-            : $user->id;
+        // サービスは受領データをそのまま永続化する（user_id 等の付与・権限介入はコントローラーの責務）。
         $favorite = $this->Favorites->newEmptyEntity();
-        $favorite->sort = $this->Favorites->getMax('sort', ['user_id' => $userId]) + 1;
+        $favorite->sort = $this->Favorites->getMax('sort', ['user_id' => $postData['user_id'] ?? null]) + 1;
         $favorite = $this->Favorites->patchEntity($favorite, $postData);
-        $favorite->user_id = $userId;
         return $this->Favorites->saveOrFail($favorite);
     }
 
@@ -140,14 +138,8 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function update(EntityInterface $target, array $postData)
     {
-        // operator は所有者を付け替え不可（保存済みの所有者を維持し偽装を防ぐ）。
-        // システム管理者は user_id を指定して所有者を変更できる。
-        $user = BcUtil::loginUser();
-        $ownerId = $target->user_id;
+        // サービスは受領データをそのまま永続化する（権限介入・所有者の維持はコントローラーの責務）。
         $favorite = $this->Favorites->patchEntity($target, $postData);
-        $favorite->user_id = (BcUtil::isAdminUser($user) && !empty($postData['user_id']))
-            ? (int)$postData['user_id']
-            : $ownerId;
         return $this->Favorites->saveOrFail($favorite);
     }
 
@@ -161,8 +153,7 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function delete(int $id)
     {
-        // IDOR対策: 所有者スコープ済みの get() を使い、他ユーザーのお気に入りを削除させない
-        return $this->Favorites->delete($this->get($id));
+        return $this->Favorites->delete($this->Favorites->get($id));
     }
 
     /**

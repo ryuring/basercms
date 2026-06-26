@@ -40,6 +40,12 @@ class FavoritesController extends BcAdminApiController
         $favorite = $message = null;
         try {
             $favorite = $service->get($id);
+            // 認可: 所有者またはシステム管理者のみ許可。それ以外は弾く（IDOR対策）
+            if (!$service->isEditable($favorite)) {
+                $favorite = null;
+                $this->setResponse($this->response->withStatus(403));
+                $message = __d('baser_core', 'お気に入りの操作権限がありません。');
+            }
         } catch (RecordNotFoundException $e) {
             $this->setResponse($this->response->withStatus(404));
             $message = __d('baser_core', 'データが見つかりません。');
@@ -82,7 +88,10 @@ class FavoritesController extends BcAdminApiController
         $this->request->allowMethod(['post', 'put']);
         $favorite = $errors = null;
         try {
-            $favorite = $service->create($this->request->getData());
+            // 認可: 所有者はログインユーザーに固定する（user_id の偽装を防ぐ）
+            $data = $this->request->getData();
+            $data['user_id'] = BcUtil::loginUser()->id;
+            $favorite = $service->create($data);
             $message = __d('baser_core', 'お気に入り「{0}」を追加しました。', $favorite->name);
             $this->BcMessage->setSuccess($message, true, false);
         } catch (PersistenceFailedException $e) {
@@ -112,11 +121,21 @@ class FavoritesController extends BcAdminApiController
     public function edit(FavoritesServiceInterface $service, $id)
     {
         $this->request->allowMethod(['post', 'put', 'patch']);
-        $favorite = $errors = null;
+        $favorite = $errors = $message = null;
         try {
-            $favorite = $service->update($service->get($id), $this->request->getData());
-            $message = __d('baser_core', 'お気に入り「{0}」を更新しました。', $favorite->name);
-            $this->BcMessage->setSuccess($message, true, false);
+            $target = $service->get($id);
+            // 認可: 所有者またはシステム管理者のみ許可。それ以外は弾く（IDOR対策）
+            if (!$service->isEditable($target)) {
+                $this->setResponse($this->response->withStatus(403));
+                $message = __d('baser_core', 'お気に入りの操作権限がありません。');
+            } else {
+                // 所有者は変更不可（user_id の付け替えを防ぐ）
+                $data = $this->request->getData();
+                unset($data['user_id']);
+                $favorite = $service->update($target, $data);
+                $message = __d('baser_core', 'お気に入り「{0}」を更新しました。', $favorite->name);
+                $this->BcMessage->setSuccess($message, true, false);
+            }
         } catch (PersistenceFailedException $e) {
             $this->setResponse($this->response->withStatus(400));
             $errors = $e->getEntity()->getErrors();
@@ -150,7 +169,12 @@ class FavoritesController extends BcAdminApiController
         $favorite = $errors = $message = null;
         try {
             $favorite = $service->get($id);
-            if ($service->delete($id)) {
+            // 認可: 所有者またはシステム管理者のみ許可。それ以外は弾く（IDOR対策）
+            if (!$service->isEditable($favorite)) {
+                $favorite = null;
+                $this->setResponse($this->response->withStatus(403));
+                $message = __d('baser_core', 'お気に入りの操作権限がありません。');
+            } elseif ($service->delete($id)) {
                 $message = __d('baser_core', 'お気に入り: {0} を削除しました。', $favorite->name);
                 $this->BcMessage->setSuccess($message, true, false);
             }

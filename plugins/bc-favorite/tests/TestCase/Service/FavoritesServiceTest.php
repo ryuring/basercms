@@ -94,33 +94,26 @@ class FavoritesServiceTest extends BcTestCase
     }
 
     /**
-     * 他ユーザーのお気に入りは取得・削除できないこと（IDOR対策の回帰テスト）
+     * 所有者またはシステム管理者のみ操作可能と判定されること（認可ヘルパー）
      */
-    public function testGet_deniesOtherUsersFavorite(): void
-    {
-        $this->loadFixtureScenario(InitAppScenario::class); // 管理者ユーザー(id=1)
-        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
-        $this->loadFixtureScenario(FavoritesScenario::class); // user_id=1 のお気に入り
-        // 別ユーザー(id=2)でログイン
-        $this->loginAdmin($this->getRequest(), 2);
-        // 他ユーザー(id=1)のお気に入りは取得できない
-        $this->expectException('Cake\Datasource\Exception\RecordNotFoundException');
-        $this->FavoritesService->get(1);
-    }
-
-    /**
-     * システム管理者は他ユーザーのお気に入りにもアクセスできること（管理者バイパス）
-     */
-    public function testGet_allowsAdminToAccessAnyUsersFavorite(): void
+    public function testIsEditable(): void
     {
         $this->loadFixtureScenario(InitAppScenario::class); // システム管理者(id=1)
         \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
-        \BcFavorite\Test\Factory\FavoriteFactory::make(['id' => 100, 'user_id' => 2, 'name' => 'others'])->persist();
-        // システム管理者でログイン
-        $this->loginAdmin($this->getRequest());
-        // 管理者は他ユーザー(id=2)のお気に入りも取得できる
-        $result = $this->FavoritesService->get(100);
-        $this->assertEquals('others', $result->name);
+        $ownedByOne = \BcFavorite\Test\Factory\FavoriteFactory::make(['id' => 100, 'user_id' => 1, 'name' => 'mine'])->getEntity();
+        $ownedByTwo = \BcFavorite\Test\Factory\FavoriteFactory::make(['id' => 101, 'user_id' => 2, 'name' => 'others'])->getEntity();
+
+        // 未ログインは常に不可
+        $this->assertFalse($this->FavoritesService->isEditable($ownedByOne));
+
+        // 別ユーザー(id=2 operator)でログイン → 自分の所有のみ可、他者は不可
+        $this->loginAdmin($this->getRequest(), 2);
+        $this->assertTrue($this->FavoritesService->isEditable($ownedByTwo));
+        $this->assertFalse($this->FavoritesService->isEditable($ownedByOne));
+
+        // システム管理者(id=1)でログイン → 他者所有でも可
+        $this->loginAdmin($this->getRequest(), 1);
+        $this->assertTrue($this->FavoritesService->isEditable($ownedByTwo));
     }
 
     /**
@@ -193,35 +186,6 @@ class FavoritesServiceTest extends BcTestCase
         $this->FavoritesService->delete(1);
         $users = $this->FavoritesService->getIndex([]);
         $this->assertEquals(5, $users->all()->count());
-    }
-
-    /**
-     * システム管理者は user_id を指定して他ユーザー分のお気に入りを作成できる（管理者バイパス）
-     */
-    public function testCreate_adminCanCreateForOtherUser(): void
-    {
-        $this->loadFixtureScenario(InitAppScenario::class); // 管理者(id=1)
-        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
-        $this->loginAdmin($this->getRequest()); // 管理者でログイン
-        $result = $this->FavoritesService->create([
-            'user_id' => '2', // 他ユーザー分
-            'name' => 'admin-made',
-            'url' => '/baser/admin/y',
-        ]);
-        $this->assertEquals(2, $result->user_id);
-    }
-
-    /**
-     * システム管理者は他ユーザーのお気に入りを削除できる（管理者バイパス）
-     */
-    public function testDelete_allowsAdminToDeleteOthersFavorite(): void
-    {
-        $this->loadFixtureScenario(InitAppScenario::class); // 管理者(id=1)
-        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
-        \BcFavorite\Test\Factory\FavoriteFactory::make(['id' => 100, 'user_id' => 2, 'name' => 'others'])->persist();
-        $this->loginAdmin($this->getRequest()); // 管理者でログイン
-        $this->assertTrue($this->FavoritesService->delete(100));
-        $this->assertFalse($this->FavoritesService->Favorites->exists(['id' => 100]));
     }
 
 }

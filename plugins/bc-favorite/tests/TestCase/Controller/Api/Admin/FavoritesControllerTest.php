@@ -148,6 +148,29 @@ class FavoritesControllerTest extends BcTestCase
     }
 
     /**
+     * 編集では所有者(user_id)を変更できないこと（所有者不変）
+     *
+     * @return void
+     */
+    public function testEdit_keepsOwnerImmutable()
+    {
+        $this->enableSecurityToken();
+        $this->enableCsrfToken();
+        $this->loadFixtureScenario(FavoritesScenario::class);
+        // user_id を偽装して送信しても無視されること
+        $data = [
+            'name' => 'owner-immutable',
+            'user_id' => '999',
+        ];
+        $this->post('/baser/api/admin/bc-favorite/favorites/edit/1.json?token=' . $this->accessToken, $data);
+        $this->assertResponseSuccess();
+        $favorites = $this->getTableLocator()->get('BcFavorite.Favorites');
+        $favorite = $favorites->get(1);
+        $this->assertEquals('owner-immutable', $favorite->name);
+        $this->assertNotEquals(999, $favorite->user_id);
+    }
+
+    /**
      * Test delete method
      *
      * @return void
