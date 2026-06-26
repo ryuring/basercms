@@ -218,12 +218,14 @@ class UsersService implements UsersServiceInterface
      */
     public function update(EntityInterface $target, array $postData): ?EntityInterface
     {
-        if(empty($postData['login_user_id'])) {
-            $loginUser = BcUtil::loginUser();
-            if(!empty($loginUser['id'])) {
-                $postData['login_user_id'] = (string) $loginUser['id'];
-            }
+        // 認可はリクエスト値ではなく実際のログインユーザーで判定する。
+        // login_user_id は権限昇格判定(willChangeSelfGroup)の基準になるため、
+        // リクエストで送られた値は信用せずセッションのユーザーIDで必ず上書きする。
+        $loginUser = BcUtil::loginUser();
+        if(empty($loginUser['id'])) {
+            throw new BcException(__d('baser_core', '特権エラーが発生しました。'));
         }
+        $postData['login_user_id'] = (string) $loginUser['id'];
         if(!empty($postData['user_groups']['_ids']) && in_array(Configure::read('BcApp.adminGroupId'), $postData['user_groups']['_ids'])) {
             if(!$loginUser->isAddableToAdminGroup()) {
                 throw new BcException(__d('baser_core', '特権エラーが発生しました。'));

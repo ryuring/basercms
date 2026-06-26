@@ -170,6 +170,34 @@ class UsersServiceTest extends BcTestCase
     }
 
     /**
+     * update() は認可基準となる login_user_id をリクエスト値で偽装させず、
+     * 常にログインユーザー（セッション）で上書きすること（権限昇格対策）
+     */
+    public function testUpdate_ignoresSpoofedLoginUserId()
+    {
+        // 偽装した login_user_id を送ってもログインユーザー(管理者)で上書きされ、更新は成立する
+        $data = [
+            'name' => 'spoof-check',
+            'login_user_id' => '9999', // 偽装値
+        ];
+        $request = $this->loginAdmin($this->getRequest('/')->withParsedBody($data));
+        Router::setRequest($request);
+        $user = $this->Users->get(1);
+        $result = $this->Users->update($user, $request->getData());
+        $this->assertEquals('spoof-check', $result->name);
+    }
+
+    /**
+     * 未ログインでは偽装した login_user_id を送っても fail-closed で弾かれること
+     * （旧実装の未定義変数エラーではなく、明示的な特権エラーで拒否する）
+     */
+    public function testUpdate_failsClosedWithoutLogin()
+    {
+        $this->expectException('BaserCore\Error\BcException');
+        $this->Users->update($this->Users->get(1), ['name' => 'x', 'login_user_id' => '1']);
+    }
+
+    /**
      * test checkUpdatePassword
      */
     public function testUpdatePassword()
