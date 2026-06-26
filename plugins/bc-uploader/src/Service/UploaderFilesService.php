@@ -228,6 +228,8 @@ class UploaderFilesService implements UploaderFilesServiceInterface
         $postData['name'] = new UploadedFile($file->getStream(), $file->getSize(), $file->getError(), $name, $file->getClientMediaType());
         $postData['alt'] = $name;
         $entity = $this->UploaderFiles->patchEntity($this->getNew(), $postData);
+        // 所有者偽装対策: user_id はリクエスト値で上書きさせず、サーバ側(ログインユーザー)で固定する
+        $entity->user_id = BcUtil::loginUser()->id;
         return $this->UploaderFiles->saveOrFail($entity);
     }
 
@@ -267,7 +269,10 @@ class UploaderFilesService implements UploaderFilesServiceInterface
         if (!empty($postData['publish_end'])) {
             $postData['publish_end'] = new \Cake\I18n\DateTime($postData['publish_end']);
         }
+        // 所有者偽装対策: user_id はリクエスト値で付け替えさせず、保存済みの所有者を維持する
+        $ownerId = $entity->user_id;
         $entity = $this->UploaderFiles->patchEntity($entity, $postData);
+        $entity->user_id = $ownerId;
         return $this->UploaderFiles->saveOrFail($entity);
     }
 

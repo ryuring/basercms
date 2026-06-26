@@ -281,6 +281,21 @@ class UploadFilesServiceTest extends BcTestCase
     }
 
     /**
+     * test update リクエストで user_id を偽装しても所有者が付け替えられないこと（IDOR対策の回帰テスト）
+     */
+    public function test_update_keepsOwnerUserId()
+    {
+        // 所有者 user_id=2 のファイル（use_permission は既定OFFのため所有者チェックは通過）
+        UploaderFileFactory::make(['id' => 1, 'name' => 'owner.jpg', 'user_id' => 2])->persist();
+        $entity = $this->UploaderFilesService->get(1);
+        $this->assertEquals(2, $entity->user_id);
+        // リクエストで user_id を別ユーザーに偽装しても付け替えられない
+        $updated = $this->UploaderFilesService->update($entity, ['user_id' => 1, 'name' => 'renamed.jpg']);
+        $this->assertEquals(2, $updated->user_id, 'user_id がリクエスト値で付け替えられている');
+        $this->assertEquals('renamed.jpg', $updated->name);
+    }
+
+    /**
      * 異常系実行
      */
 //    public function test_update_error()
