@@ -32,4 +32,18 @@ class SiteConfig extends EntityAlias
         'id' => false
     ];
 
+    /**
+     * Hidden
+     *
+     * SMTP認証情報など機微な値を toArray() / JSON シリアライズから除外する。
+     * （API レスポンスでの平文露出を防ぐ。プロパティ直読みや FormHelper には影響しないため、
+     * メール送信(BcMailer)・管理画面フォームの表示/保存は従来どおり動作する。）
+     *
+     * @var array
+     */
+    protected array $_hidden = [
+        'smtp_user',
+        'smtp_password',
+    ];
+
 }
