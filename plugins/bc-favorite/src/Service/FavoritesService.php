@@ -56,10 +56,14 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function get($id): EntityInterface
     {
-        // IDOR対策: お気に入りはユーザー個別データのため、ログインユーザー所有のものだけ取得する
+        // IDOR対策: お気に入りはユーザー個別データのため、ログインユーザー所有のものだけ取得する。
+        // ただしシステム管理者は全ユーザーのお気に入りにアクセスできる。
         $user = BcUtil::loginUser();
         if (!$user) {
             throw new RecordNotFoundException(__d('baser_core', 'データが見つかりません。'));
+        }
+        if (BcUtil::isAdminUser($user)) {
+            return $this->Favorites->get($id);
         }
         return $this->Favorites->find()
             ->where([

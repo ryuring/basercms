@@ -109,6 +109,21 @@ class FavoritesServiceTest extends BcTestCase
     }
 
     /**
+     * システム管理者は他ユーザーのお気に入りにもアクセスできること（管理者バイパス）
+     */
+    public function testGet_allowsAdminToAccessAnyUsersFavorite(): void
+    {
+        $this->loadFixtureScenario(InitAppScenario::class); // システム管理者(id=1)
+        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
+        \BcFavorite\Test\Factory\FavoriteFactory::make(['id' => 100, 'user_id' => 2, 'name' => 'others'])->persist();
+        // システム管理者でログイン
+        $this->loginAdmin($this->getRequest());
+        // 管理者は他ユーザー(id=2)のお気に入りも取得できる
+        $result = $this->FavoritesService->get(100);
+        $this->assertEquals('others', $result->name);
+    }
+
+    /**
      * testGetIndex
      *
      * @return void
