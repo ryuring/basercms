@@ -243,7 +243,8 @@ class UploaderFilesService implements UploaderFilesServiceInterface
      */
     public function update(EntityInterface $entity, array $postData)
     {
-        if(!$this->isEditable($postData)) {
+        // IDOR対策: 所有者判定はリクエスト値ではなく保存済みエンティティで行う
+        if(!$this->isEditable($entity->toArray())) {
             throw new BcException(__d('baser_core', 'ファイルの変更権限がありません。' ));
         }
         if(!empty($postData['overwrite']) && !empty($postData['file'])) {
@@ -278,13 +279,14 @@ class UploaderFilesService implements UploaderFilesServiceInterface
      * @checked
      * @noTodo
      */
-    public function isEditable(array $postData)
+    public function isEditable(array $data)
     {
         if(!$this->uploaderConfigsService->get()->use_permission) return true;
-        if(!isset($postData['user_id'])) return false;
+        if(!isset($data['user_id'])) return false;
         $user = BcUtil::loginUser();
         if(!$user) return false;
-        if (!BcUtil::isAdminUser($user) && $postData['user_id'] !== $user->id) {
+        // 型差異(文字列/整数)で正規ユーザーを誤って拒否しないよう int で比較する
+        if (!BcUtil::isAdminUser($user) && (int)$data['user_id'] !== (int)$user->id) {
             return false;
         }
         return true;

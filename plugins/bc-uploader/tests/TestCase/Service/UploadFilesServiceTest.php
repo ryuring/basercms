@@ -301,29 +301,26 @@ class UploadFilesServiceTest extends BcTestCase
      */
     public function test_isEditable()
     {
-        $this->markTestIncomplete('こちらのテストはまだ未確認です');
-        //準備
+        // 権限制限を有効化
         UploaderConfigFactory::make(['name' => 'use_permission', 'value' => true])->persist();
-        // ログインしている状態、アップローダーファイルにuser_id が設定されていない
-        $this->loadFixtureScenario(InitAppScenario::class);
-        $this->loginAdmin($this->getRequest('/baser/admin'));
-        $result = $this->UploaderFilesService->isEditable([]);
-        $this->assertFalse($result);
+        $this->loadFixtureScenario(InitAppScenario::class); // 管理者ユーザー(id=1)
+        // 非管理者ユーザー(id=2)を作成
+        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
 
-        // ログインしていない状態
-        $result = $this->UploaderFilesService->isEditable([]);
-        $this->assertFalse($result);
+        // 非管理者ユーザーでログイン
+        $this->loginAdmin($this->getRequest('/baser/admin'), 2);
+        // user_id 未設定 → false
+        $this->assertFalse($this->UploaderFilesService->isEditable([]));
+        // 自分のファイル(int) → true
+        $this->assertTrue($this->UploaderFilesService->isEditable(['user_id' => 2]));
+        // 自分のファイル(文字列) → 型キャストで許可される（正規ユーザーを誤って拒否しない）
+        $this->assertTrue($this->UploaderFilesService->isEditable(['user_id' => '2']));
+        // 他人のファイル → false（IDOR対策の要）
+        $this->assertFalse($this->UploaderFilesService->isEditable(['user_id' => 1]));
 
-        // ログインしている状態、アップローダーファイルにuser_id が設定されている
-        $result = $this->UploaderFilesService->isEditable(['user_id' => 1]);
-        $this->assertTrue($result);
-
-        //異常系実行
-        $postData = [
-            'user_id' => 99
-        ];
-        $result = $this->UploaderFilesService->isEditable($postData);
-        $this->assertFalse($result);
+        // 管理者でログイン → 所有者でなくても true（管理者バイパス）
+        $this->loginAdmin($this->getRequest('/baser/admin'), 1);
+        $this->assertTrue($this->UploaderFilesService->isEditable(['user_id' => 999]));
     }
 
     /**
