@@ -1562,6 +1562,15 @@ class BcBaserHelperTest extends BcTestCase
         $this->assertEquals($expected, $result);
     }
 
+    /**
+     * mark() は escape を省略した場合、安全側（エスケープ有効）が既定であること（XSS対策）
+     */
+    public function testMark_escapesByDefault()
+    {
+        $result = $this->BcBaser->mark('<script>', 'aaa<script>bbb');
+        $this->assertEquals('aaa<strong>&lt;script&gt;</strong>bbb', $result);
+    }
+
     public static function markDataProvider()
     {
         return [

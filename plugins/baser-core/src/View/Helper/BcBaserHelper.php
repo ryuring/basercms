@@ -1786,14 +1786,14 @@ class BcBaserHelper extends Helper
      * @param string $text 検索対象文字列
      * @param string $name マーク用タグ（初期値 : strong）
      * @param array $attributes タグの属性（初期値 : array()）
-     * @param bool $escape エスケープ有無（初期値 : false）
+     * @param bool $escape エスケープ有無（初期値 : true ※XSS対策のため安全側を既定とする）
      * @return string $text 変換後文字列
      * @todo TextHelperに移行を検討
      * @checked
      * @noTodo
      * @unitTest
      */
-    public function mark($search, $text, $name = 'strong', $attributes = [], $escape = false)
+    public function mark($search, $text, $name = 'strong', $attributes = [], $escape = true)
     {
         if (!is_array($search)) {
             $search = [$search];
