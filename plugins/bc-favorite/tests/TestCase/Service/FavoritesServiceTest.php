@@ -195,4 +195,33 @@ class FavoritesServiceTest extends BcTestCase
         $this->assertEquals(5, $users->all()->count());
     }
 
+    /**
+     * システム管理者は user_id を指定して他ユーザー分のお気に入りを作成できる（管理者バイパス）
+     */
+    public function testCreate_adminCanCreateForOtherUser(): void
+    {
+        $this->loadFixtureScenario(InitAppScenario::class); // 管理者(id=1)
+        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
+        $this->loginAdmin($this->getRequest()); // 管理者でログイン
+        $result = $this->FavoritesService->create([
+            'user_id' => '2', // 他ユーザー分
+            'name' => 'admin-made',
+            'url' => '/baser/admin/y',
+        ]);
+        $this->assertEquals(2, $result->user_id);
+    }
+
+    /**
+     * システム管理者は他ユーザーのお気に入りを削除できる（管理者バイパス）
+     */
+    public function testDelete_allowsAdminToDeleteOthersFavorite(): void
+    {
+        $this->loadFixtureScenario(InitAppScenario::class); // 管理者(id=1)
+        \BaserCore\Test\Factory\UserFactory::make(['id' => 2, 'name' => 'operator'])->persist();
+        \BcFavorite\Test\Factory\FavoriteFactory::make(['id' => 100, 'user_id' => 2, 'name' => 'others'])->persist();
+        $this->loginAdmin($this->getRequest()); // 管理者でログイン
+        $this->assertTrue($this->FavoritesService->delete(100));
+        $this->assertFalse($this->FavoritesService->Favorites->exists(['id' => 100]));
+    }
+
 }

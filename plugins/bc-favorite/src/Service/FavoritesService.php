@@ -115,8 +115,12 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function create(array $postData)
     {
-        // 所有者偽装対策: user_id はリクエスト値ではなくログインユーザーで固定する
-        $userId = BcUtil::loginUser()->id;
+        // operator は自分のお気に入りのみ作成可（user_id をログインユーザーに固定し偽装を防ぐ）。
+        // システム管理者は user_id を指定して他ユーザー分も作成できる。
+        $user = BcUtil::loginUser();
+        $userId = (BcUtil::isAdminUser($user) && !empty($postData['user_id']))
+            ? (int)$postData['user_id']
+            : $user->id;
         $favorite = $this->Favorites->newEmptyEntity();
         $favorite->sort = $this->Favorites->getMax('sort', ['user_id' => $userId]) + 1;
         $favorite = $this->Favorites->patchEntity($favorite, $postData);
@@ -136,10 +140,14 @@ class FavoritesService implements FavoritesServiceInterface
      */
     public function update(EntityInterface $target, array $postData)
     {
-        // 所有者偽装対策: user_id をリクエスト値で付け替えさせず、保存済みの所有者を維持する
+        // operator は所有者を付け替え不可（保存済みの所有者を維持し偽装を防ぐ）。
+        // システム管理者は user_id を指定して所有者を変更できる。
+        $user = BcUtil::loginUser();
         $ownerId = $target->user_id;
         $favorite = $this->Favorites->patchEntity($target, $postData);
-        $favorite->user_id = $ownerId;
+        $favorite->user_id = (BcUtil::isAdminUser($user) && !empty($postData['user_id']))
+            ? (int)$postData['user_id']
+            : $ownerId;
         return $this->Favorites->saveOrFail($favorite);
     }
 
