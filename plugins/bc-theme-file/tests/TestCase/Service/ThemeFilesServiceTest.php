@@ -255,6 +255,34 @@ class ThemeFilesServiceTest extends BcTestCase
     }
 
     /**
+     * test upload webroot 配下への実行可能ファイルのアップロードを拒否する（RCE対策の回帰テスト）
+     */
+    public function test_upload_denyExecutableExtensionInWebroot()
+    {
+        // webroot を含むパス（公開・PHP実行可能ディレクトリ相当）
+        $fullpath = TMP . 'theme_sec_test' . DS . 'webroot' . DS . 'css';
+        $filePath = TMP . 'test_upload_sec' . DS;
+        (new BcFolder($filePath))->create();
+        $testFile = $filePath . 'shell.php';
+        (new BcFile($testFile))->create();
+        $files = [
+            'file' => new UploadedFile($testFile, 10, UPLOAD_ERR_OK, 'shell.php', 'text/x-php'),
+        ];
+        $denied = false;
+        try {
+            $this->ThemeFileService->upload($fullpath, $files);
+        } catch (\BaserCore\Error\BcException $e) {
+            $denied = true;
+        }
+        $this->assertTrue($denied, 'webroot 配下への実行可能ファイルのアップロードが拒否されていません');
+        $this->assertFalse(file_exists($fullpath . DS . 'shell.php'));
+        // 後片付け
+        (new BcFolder(TMP . 'theme_sec_test'))->delete();
+        if (file_exists($testFile)) unlink($testFile);
+        if (is_dir($filePath)) rmdir($filePath);
+    }
+
+    /**
      * test copyToTheme
      */
     public function test_copyToTheme()

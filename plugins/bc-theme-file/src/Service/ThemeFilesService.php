@@ -213,7 +213,18 @@ class ThemeFilesService extends BcThemeFileService implements ThemeFilesServiceI
         }
         $Folder = new BcFolder($fullpath);
         $Folder->create();
-        $name = $postData['file']->getClientFilename();
+        // パストラバーサル対策: クライアント提供のファイル名からディレクトリ要素を除去する
+        $name = basename($postData['file']->getClientFilename());
+        // RCE対策: webroot 配下（公開・PHP実行可能）への実行可能ファイル設置を拒否する。
+        // テンプレート種別（templates 配下）の .php はレンダリング専用で直接実行されないため許可する。
+        if (strpos($fullpath . DS, DS . 'webroot' . DS) !== false) {
+            $denyExt = ['php', 'php3', 'php4', 'php5', 'php7', 'phps', 'phtml', 'pht', 'phar', 'cgi', 'pl', 'asp', 'aspx', 'jsp', 'shtml', 'htaccess'];
+            foreach (explode('.', strtolower($name)) as $part) {
+                if (in_array($part, $denyExt, true)) {
+                    throw new BcException(__d('baser_core', 'このファイル形式はアップロードできません。'));
+                }
+            }
+        }
         $postData['file']->moveTo($fullpath . DS . $name);
     }
 
