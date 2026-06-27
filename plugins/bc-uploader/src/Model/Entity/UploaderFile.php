@@ -42,7 +42,9 @@ class UploaderFile extends Entity
      */
     protected array $_accessible = [
         '*' => true,
-        'id' => false
+        'id' => false,
+        // 所有者はサーバ側(ログインユーザー)で直接代入するため、リクエスト値での書き換えを禁止する（偽装対策）
+        'user_id' => false
     ];
 
     /**

@@ -307,9 +307,11 @@ class UploaderFilesService implements UploaderFilesServiceInterface
      */
     public function getNew()
     {
-        return $this->UploaderFiles->newEntity([
-            'user_id' => BcUtil::loginUser()->id
-        ]);
+        // user_id は _accessible で false にしているため newEntity 経由では設定されない。
+        // 所有者はサーバ側でログインユーザーを直接代入する（偽装対策と整合）。
+        $entity = $this->UploaderFiles->newEntity([]);
+        $entity->user_id = BcUtil::loginUser()->id;
+        return $entity;
     }
 
     /**

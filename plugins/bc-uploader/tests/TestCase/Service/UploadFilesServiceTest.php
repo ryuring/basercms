@@ -395,4 +395,16 @@ class UploadFilesServiceTest extends BcTestCase
 
     }
 
+    /**
+     * user_id はマスアサインメント（patchEntity）で書き換えできないこと（所有者偽装対策）
+     */
+    public function test_userId_isNotAccessible()
+    {
+        $table = $this->getTableLocator()->get('BcUploader.UploaderFiles');
+        $entity = $table->newEntity(['name' => 'a.jpg', 'user_id' => 999]);
+        $this->assertNull($entity->user_id);
+        $entity = $table->patchEntity($entity, ['user_id' => 888]);
+        $this->assertNull($entity->user_id);
+    }
+
 }
