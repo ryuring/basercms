@@ -148,3 +148,4 @@ node_modules
 /.github/instructions/local.instructions.md
 /.serena
 /.claude/settings.local.json
+/.superpowers
