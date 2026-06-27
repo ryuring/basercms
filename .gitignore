@@ -149,3 +149,4 @@ node_modules
 /.serena
 /.claude/settings.local.json
 /.superpowers
+/.phpunit.log
